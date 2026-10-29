@@ -1,41 +1,42 @@
 # Task Collaboration
 
-A team collaboration project intended to help people organize shared tasks, clarify ownership, and follow progress.
+A project aimed at helping teams organize shared work, clarify task ownership, and follow progress from one place.
 
 ## Project goals
 
-- Keep team tasks organized in one place.
-- Make task ownership and status easier to understand.
+- Keep team tasks organized.
+- Make task ownership and status easy to understand.
 - Improve visibility into pending and completed work.
+- Support a clearer shared workflow for team members.
 
-> This README intentionally avoids claiming a particular framework or a fully working feature until the source code and configuration can be verified.
+## Project status
+
+The default branch currently contains this README but does not expose application source or build configuration. As a result, the implemented features, technology stack, and run commands cannot yet be verified from the repository.
 
 ## Getting started
 
-1. Clone the repository:
+Once the application source is added, update this section with:
 
-```bash
-git clone https://github.com/parakandlabharath/Task-Collaboration.git
-cd Task-Collaboration
-```
-
-2. Inspect the project files to identify the actual framework and dependency manager.
-3. Install dependencies using the commands for that framework.
-4. Follow the verified run instructions added by the project maintainer.
+1. Prerequisites and exact version requirements.
+2. Clone and installation commands.
+3. Database or environment configuration, if needed.
+4. The verified command to run the application.
+5. A sample local URL and test account instructions, if applicable.
 
 ## Screenshots and demo
 
-Add screenshots captured from the working project in a `screenshots/` folder. Useful examples include the task list or board, task details, and any collaboration workflow that is implemented.
+Add screenshots captured from the working application in a `screenshots/` directory. Useful examples include the task list or board, task details, and implemented collaboration flows.
 
-## Recommended project documentation
+## Development checklist
 
-- [ ] List the actual language, framework, database, and versions.
-- [ ] Document prerequisites and exact setup commands.
-- [ ] Explain implemented features and known limitations.
-- [ ] Add screenshots or a short demo.
-- [ ] Include tests and sample configuration where appropriate.
-- [ ] Add a suitable license only after deciding how the project should be licensed.
+- [ ] Add the application source code and dependency/build files.
+- [ ] Document the actual language, framework, database, and versions.
+- [ ] List implemented features and known limitations.
+- [ ] Add setup instructions verified on a fresh clone.
+- [ ] Add tests and screenshots.
+- [ ] Add a suitable `.gitignore`.
+- [ ] Choose and document a license if you intend to publish the project for reuse.
 
 ## Contributing
 
-Use focused branches and descriptive commits. Explain the purpose and testing of each change in pull requests.
+Create a focused branch, use descriptive commit messages, and explain the purpose and testing of each change in a pull request.
