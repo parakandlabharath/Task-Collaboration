@@ -1,45 +1,41 @@
-# TaskFlow — Team Task Collaboration
+# Task Collaboration
 
-TaskFlow is a team task-management website concept for organizing shared work, assigning responsibilities, and tracking progress in one place.
+A team collaboration project intended to help people organize shared tasks, clarify ownership, and follow progress.
 
-## Overview
+## Project goals
 
-Group projects can become difficult to manage when tasks, deadlines, and ownership are scattered across messages. TaskFlow aims to make team work easier to follow with a shared view of tasks and their status.
+- Keep team tasks organized in one place.
+- Make task ownership and status easier to understand.
+- Improve visibility into pending and completed work.
 
-## Features
-
-- **Task boards:** Organize work into stages such as To Do, In Progress, and Done.
-- **Task ownership:** Make responsibilities clear by assigning work to team members.
-- **Deadlines and priorities:** Track due dates and highlight important work.
-- **Team roles:** Distinguish permissions for administrators, workers, and viewers.
-- **Progress visibility:** Help teammates understand what is pending and completed.
-
-## Technology
-
-The exact framework and setup commands should match the source code in this repository. Add the confirmed language, framework, database, and tool versions here so that contributors can reproduce the project.
+> This README intentionally avoids claiming a particular framework or a fully working feature until the source code and configuration can be verified.
 
 ## Getting started
 
-1. Open the repository and review its source files.
-2. Install the dependencies required by the project.
-3. Follow the run instructions for the framework used by the source code.
+1. Clone the repository:
 
-> **Setup note:** Add verified installation and run commands here before treating this project as ready for a fresh local setup.
+```bash
+git clone https://github.com/parakandlabharath/Task-Collaboration.git
+cd Task-Collaboration
+```
 
-## Roadmap ideas
+2. Inspect the project files to identify the actual framework and dependency manager.
+3. Install dependencies using the commands for that framework.
+4. Follow the verified run instructions added by the project maintainer.
 
-- Add screenshots or a short demo.
-- Document the project architecture and data model.
-- Include sample configuration without committing passwords, API keys, or other secrets.
-- Add tests and a repeatable setup guide.
+## Screenshots and demo
+
+Add screenshots captured from the working project in a `screenshots/` folder. Useful examples include the task list or board, task details, and any collaboration workflow that is implemented.
+
+## Recommended project documentation
+
+- [ ] List the actual language, framework, database, and versions.
+- [ ] Document prerequisites and exact setup commands.
+- [ ] Explain implemented features and known limitations.
+- [ ] Add screenshots or a short demo.
+- [ ] Include tests and sample configuration where appropriate.
+- [ ] Add a suitable license only after deciding how the project should be licensed.
 
 ## Contributing
 
-1. Fork this repository.
-2. Create a branch: `git checkout -b feature/your-change`.
-3. Commit your changes: `git commit -m "Describe your change"`.
-4. Push the branch and open a pull request.
-
-## License
-
-See the [LICENSE](LICENSE) file if included in this repository.
+Use focused branches and descriptive commits. Explain the purpose and testing of each change in pull requests.
