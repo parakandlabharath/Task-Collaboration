@@ -18,3 +18,11 @@ View your app in AI Studio: https://ai.studio/apps/65140847-4163-42dc-a760-14a18
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+
+## Demo and persistence limitations
+
+- Workspace projects, tasks, comments, and activity are currently held in server memory and reset when the server restarts.
+- The preset user identities are demo identities, not authenticated accounts.
+- WebSocket updates provide live synchronization while clients are connected to the same server process; this is not a durable multi-instance collaboration backend.
+- Before public deployment, add authentication, authorization per project, persistent database storage, input validation, and WebSocket message limits.
