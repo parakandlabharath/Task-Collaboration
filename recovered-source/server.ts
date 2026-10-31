@@ -1,6 +1,7 @@
 import express from 'express';
 import http from 'http';
 import path from 'path';
+import fs from 'node:fs';
 import { WebSocketServer, WebSocket } from 'ws';
 import { GoogleGenAI } from '@google/genai';
 import {
@@ -226,12 +227,49 @@ const initialActivities: ActivityLog[] = [
 ];
 
 // Server state store
-let state = {
+const dataFile = process.env.DATA_FILE || path.join(process.cwd(), 'data', 'workspace.json');
+
+function loadWorkspaceState() {
+  try {
+    if (!fs.existsSync(dataFile)) return null;
+    const parsed = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    if (!parsed || !Array.isArray(parsed.projects) || !Array.isArray(parsed.tasks) ||
+        !Array.isArray(parsed.comments) || !Array.isArray(parsed.activities)) {
+      console.warn('Workspace data file has an invalid shape; starting with demo seed data.');
+      return null;
+    }
+    return parsed;
+  } catch (error) {
+    console.error('Could not load workspace data; starting with demo seed data:', error);
+    return null;
+  }
+}
+
+let state = loadWorkspaceState() || {
   projects: [...initialProjects],
   tasks: [...initialTasks],
   comments: [...initialComments],
   activities: [...initialActivities],
 };
+
+// Persist on the server's local disk. For hosted deployment, DATA_FILE must
+// point to a mounted persistent volume; ephemeral filesystems are not durable.
+function persistWorkspaceState() {
+  try {
+    fs.mkdirSync(path.dirname(dataFile), { recursive: true });
+    const safeState = {
+      projects: state.projects,
+      tasks: state.tasks.map(({ activeEditingUser, ...task }) => task),
+      comments: state.comments,
+      activities: state.activities,
+    };
+    const tempFile = `${dataFile}.tmp`;
+    fs.writeFileSync(tempFile, JSON.stringify(safeState, null, 2), 'utf8');
+    fs.renameSync(tempFile, dataFile);
+  } catch (error) {
+    console.error('Workspace persistence failed:', error);
+  }
+}
 
 // WebSocket client session mapping
 interface ExtendedWebSocket extends WebSocket {
@@ -245,7 +283,7 @@ interface ExtendedWebSocket extends WebSocket {
 }
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
@@ -593,6 +631,7 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
           break;
         }
       }
+      persistWorkspaceState();
     } catch (e) {
       console.error('Error handling WebSocket message:', e);
     }
