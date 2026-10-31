@@ -1,0 +1,6 @@
+{
+  "name": "Task Collaboration App",
+  "description": "A real-time task management application with live collaboration, kanban boards, presence tracking, and real-time activity updates.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
