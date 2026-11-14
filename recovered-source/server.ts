@@ -230,18 +230,32 @@ const initialActivities: ActivityLog[] = [
 // Server state store
 const dataFile = process.env.DATA_FILE || path.join(process.cwd(), 'data', 'workspace.json');
 
+function isValidActivity(value: unknown): value is ActivityLog {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const activity = value as Record<string, unknown>;
+  return typeof activity.id === 'string' && activity.id.length > 0 &&
+    typeof activity.projectId === 'string' && activity.projectId.length > 0 &&
+    typeof activity.userId === 'string' && typeof activity.userName === 'string' &&
+    typeof activity.userAvatar === 'string' && typeof activity.action === 'string' &&
+    typeof activity.details === 'string' && typeof activity.timestamp === 'string' &&
+    Number.isFinite(Date.parse(activity.timestamp));
+}
+
 function loadWorkspaceState() {
   try {
     if (!fs.existsSync(dataFile)) return null;
     const parsed = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
-    if (!parsed || !Array.isArray(parsed.projects) || !Array.isArray(parsed.tasks) ||
-        !Array.isArray(parsed.comments) || !Array.isArray(parsed.activities)) {
-      console.warn('Workspace data file has an invalid shape; starting with demo seed data.');
+    const valid = parsed && Array.isArray(parsed.projects) && parsed.projects.every(isValidProject) &&
+      Array.isArray(parsed.tasks) && parsed.tasks.every(isValidTask) &&
+      Array.isArray(parsed.comments) && parsed.comments.every(isValidComment) &&
+      Array.isArray(parsed.activities) && parsed.activities.every(isValidActivity);
+    if (!valid) {
+      console.warn('Workspace data file failed schema validation; original file was preserved and demo seed data will be used.');
       return null;
     }
     return parsed;
   } catch (error) {
-    console.error('Could not load workspace data; starting with demo seed data:', error);
+    console.error('Could not load workspace data; original file was preserved and demo seed data will be used:', error);
     return null;
   }
 }
