@@ -404,7 +404,7 @@ Return JSON format:
 const server = http.createServer(app);
 
 // Initialize WebSocket Server
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 1024 * 1024 });
 
 function getPresenceList(projectId?: string): PresenceUser[] {
   const presenceMap = new Map<string, PresenceUser>();
@@ -472,7 +472,9 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
               payload: {
                 projects: state.projects,
                 tasks: state.tasks.filter((t) => t.projectId === ws.projectId),
-                comments: state.comments,
+                comments: state.comments.filter((comment) =>
+                  state.tasks.some((task) => task.id === comment.taskId && task.projectId === ws.projectId)
+                ),
                 activities: state.activities.filter((a) => a.projectId === ws.projectId),
                 presence: getPresenceList(ws.projectId),
               },
@@ -593,7 +595,14 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
           const task = state.tasks.find((t) => t.id === newComment.taskId && t.projectId === ws.projectId);
           if (!task) break;
           if (!state.comments.some((c) => c.id === newComment.id)) {
-            state.comments.push({ ...newComment, content: newComment.content.trim().slice(0, 2000) });
+            const trustedComment: Comment = {
+              ...newComment,
+              userId: ws.userId,
+              userName: ws.userName || 'Anonymous',
+              userAvatar: ws.userAvatar || '',
+              content: newComment.content.trim().slice(0, 2000),
+            };
+            state.comments.push(trustedComment);
 
             let activity: ActivityLog | null = null;
             {
@@ -602,9 +611,9 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
                 projectId: task.projectId,
                 taskId: task.id,
                 taskTitle: task.title,
-                userId: newComment.userId,
-                userName: newComment.userName,
-                userAvatar: newComment.userAvatar,
+                userId: ws.userId,
+                userName: ws.userName || 'Anonymous',
+                userAvatar: ws.userAvatar || '',
                 action: 'added_comment',
                 details: `commented on "${task.title}"`,
                 timestamp: new Date().toISOString(),
@@ -612,7 +621,7 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
               state.activities.unshift(activity);
             }
 
-            broadcast({ type: 'COMMENT_ADDED', projectId: ws.projectId, payload: { comment: newComment, activity } }, ws.projectId);
+            broadcast({ type: 'COMMENT_ADDED', projectId: ws.projectId, payload: { comment: trustedComment, activity } }, ws.projectId);
           }
           break;
         }
