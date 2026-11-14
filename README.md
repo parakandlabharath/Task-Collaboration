@@ -14,7 +14,8 @@ A browser-based team task workspace with a Kanban board, list/calendar/priority 
 - Broadcast project updates and user presence through WebSockets.
 - Save projects, tasks, comments, and activities to a JSON file on the server.
 - Use optional AI task breakdown and project summaries when Gemini is configured.
-- Validate incoming task, project, comment, and status data before accepting WebSocket changes.
+- Validate incoming task, project, comment, nested member/checklist data, and status fields before accepting WebSocket changes.
+- Notify the active client when the server cannot persist a workspace change to disk.
 
 ## Technology
 
@@ -73,7 +74,8 @@ React client
 - The server validates payload shapes and scopes task/comment events to the joined project, but project membership and user identity are not authenticated.
 - JSON file persistence is single-process local storage, not a transactional database.
 - AI output is generated advice and must be reviewed.
-- Automated tests currently cover validation helpers; full WebSocket integration and browser end-to-end tests remain to be added.
+- Automated tests cover validation helpers; full WebSocket integration and browser end-to-end tests remain to be added.
+- Persistence failures are reported to the sending client, but the in-memory change may still be visible until the server restarts.
 
 ## Completion checklist
 
@@ -83,6 +85,7 @@ React client
 - [x] Validation helpers and unit tests
 - [x] Scope task/comment updates to the joined project
 - [x] Limit WebSocket message payload size
+- [x] Notify users when workspace persistence fails
 - [ ] Add authenticated users and server-enforced project membership
 - [ ] Replace JSON file storage with a transactional database if multi-user deployment is required
 - [ ] Add WebSocket integration tests and browser end-to-end tests
