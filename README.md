@@ -12,7 +12,7 @@ A browser-based team task workspace with a Kanban board, list/calendar/priority 
 - Add comments and view project activity.
 - View tasks as Kanban, list, calendar, and priority matrix.
 - Broadcast project updates and user presence through WebSockets.
-- Save projects, tasks, comments, and activities to a JSON file on the server.
+- Save projects, tasks, comments, and activities to a JSON file on the server; validate the saved workspace schema before loading it.
 - Use optional AI task breakdown and project summaries when Gemini is configured.
 - Validate incoming task, project, comment, nested member/checklist data, and status fields before accepting WebSocket changes.
 - Notify the active client when the server cannot persist a workspace change to disk.
@@ -82,6 +82,7 @@ React client
 - [x] Recovered application source organized under recovered-source/
 - [x] Type-check and production build workflow
 - [x] JSON file persistence for workspace data
+- [x] Validate persisted workspace records before restoring them
 - [x] Validation helpers and unit tests
 - [x] Scope task/comment updates to the joined project
 - [x] Limit WebSocket message payload size
