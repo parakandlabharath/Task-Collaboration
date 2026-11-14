@@ -166,6 +166,11 @@ export function useRealtimeSession(initialUser: User = PRESET_USERS[0], initialP
             showToast(`New project created: ${project.name}`, 'success');
             break;
           }
+
+          case 'SERVER_ERROR': {
+            showToast(data.payload?.message || 'The server could not save your latest change. Export or back up your work.', 'warn');
+            break;
+          }
         }
       } catch (e) {
         console.error('Error handling WebSocket message:', e);
