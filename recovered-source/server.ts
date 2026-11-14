@@ -13,6 +13,7 @@ import {
   WSEvent,
   User,
 } from './src/types.js';
+import { isValidTask, isValidProject, isValidComment, isValidTaskStatus } from './src/lib/validation.js';
 
 // Pre-defined initial users for quick simulation
 const PRESET_USERS: User[] = [
@@ -452,12 +453,17 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
 
       switch (data.type) {
         case 'JOIN_PROJECT': {
-          const { user, projectId } = data.payload;
+          const { user, projectId } = data.payload || {};
+          if (!user || typeof user.id !== 'string' || !user.id.trim() ||
+              typeof user.name !== 'string' || !user.name.trim()) break;
+          const requestedProjectId = typeof projectId === 'string' ? projectId : 'proj_launch';
+          ws.projectId = state.projects.some((project) => project.id === requestedProjectId)
+            ? requestedProjectId
+            : 'proj_launch';
           ws.userId = user.id;
-          ws.userName = user.name;
-          ws.userAvatar = user.avatar;
-          ws.userColor = user.color || '#3b82f6';
-          ws.projectId = projectId || 'proj_launch';
+          ws.userName = user.name.slice(0, 80);
+          ws.userAvatar = typeof user.avatar === 'string' ? user.avatar.slice(0, 500) : '';
+          ws.userColor = typeof user.color === 'string' ? user.color.slice(0, 20) : '#3b82f6';
 
           // Send full current state to newly joined client
           ws.send(
@@ -486,7 +492,9 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         }
 
         case 'TASK_CREATED': {
-          const newTask: Task = data.payload.task;
+          const newTask: Task = data.payload?.task;
+          if (!ws.userId || !isValidTask(newTask) || newTask.projectId !== ws.projectId ||
+              !state.projects.some((project) => project.id === newTask.projectId)) break;
           // Guard against duplicates
           if (!state.tasks.some((t) => t.id === newTask.id)) {
             state.tasks.unshift(newTask);
@@ -497,7 +505,7 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
               projectId: newTask.projectId,
               taskId: newTask.id,
               taskTitle: newTask.title,
-              userId: data.senderId || ws.userId || 'system',
+              userId: ws.userId || 'system',
               userName: ws.userName || 'Someone',
               userAvatar: ws.userAvatar || '',
               action: 'created_task',
@@ -512,8 +520,9 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         }
 
         case 'TASK_UPDATED': {
-          const updatedTask: Task = data.payload.task;
-          const idx = state.tasks.findIndex((t) => t.id === updatedTask.id);
+          const updatedTask: Task = data.payload?.task;
+          if (!ws.userId || !isValidTask(updatedTask) || updatedTask.projectId !== ws.projectId) break;
+          const idx = state.tasks.findIndex((t) => t.id === updatedTask.id && t.projectId === ws.projectId);
           if (idx !== -1) {
             state.tasks[idx] = { ...updatedTask, updatedAt: new Date().toISOString() };
 
@@ -523,8 +532,10 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         }
 
         case 'TASK_MOVED': {
-          const { taskId, newStatus, newPosition } = data.payload;
-          const task = state.tasks.find((t) => t.id === taskId);
+          const { taskId, newStatus, newPosition } = data.payload || {};
+          if (!ws.userId || typeof taskId !== 'string' || !isValidTaskStatus(newStatus) ||
+              !Number.isInteger(newPosition) || newPosition < 0) break;
+          const task = state.tasks.find((t) => t.id === taskId && t.projectId === ws.projectId);
           if (task) {
             const oldStatus = task.status;
             task.status = newStatus;
@@ -551,9 +562,11 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         }
 
         case 'TASK_DELETED': {
-          const { taskId, projectId } = data.payload;
-          const task = state.tasks.find((t) => t.id === taskId);
+          const { taskId } = data.payload || {};
+          if (!ws.userId || typeof taskId !== 'string') break;
+          const task = state.tasks.find((t) => t.id === taskId && t.projectId === ws.projectId);
           if (task) {
+            const projectId = task.projectId;
             state.tasks = state.tasks.filter((t) => t.id !== taskId);
             const activity: ActivityLog = {
               id: `act_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
@@ -575,13 +588,15 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         }
 
         case 'COMMENT_ADDED': {
-          const newComment: Comment = data.payload.comment;
+          const newComment: Comment = data.payload?.comment;
+          if (!ws.userId || !isValidComment(newComment)) break;
+          const task = state.tasks.find((t) => t.id === newComment.taskId && t.projectId === ws.projectId);
+          if (!task) break;
           if (!state.comments.some((c) => c.id === newComment.id)) {
-            state.comments.push(newComment);
+            state.comments.push({ ...newComment, content: newComment.content.trim().slice(0, 2000) });
 
-            const task = state.tasks.find((t) => t.id === newComment.taskId);
             let activity: ActivityLog | null = null;
-            if (task) {
+            {
               activity = {
                 id: `act_${Date.now()}`,
                 projectId: task.projectId,
@@ -603,10 +618,11 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         }
 
         case 'TASK_LOCK': {
-          const { taskId, isLocked } = data.payload;
-          ws.activeTaskId = isLocked ? taskId : null;
-          const task = state.tasks.find((t) => t.id === taskId);
+          const { taskId, isLocked } = data.payload || {};
+          if (!ws.userId || typeof taskId !== 'string' || typeof isLocked !== 'boolean') break;
+          const task = state.tasks.find((t) => t.id === taskId && t.projectId === ws.projectId);
           if (task) {
+            ws.activeTaskId = isLocked ? taskId : null;
             task.activeEditingUser = isLocked
               ? {
                   id: ws.userId || 'anon',
@@ -623,7 +639,8 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         }
 
         case 'PROJECT_CREATED': {
-          const newProj: Project = data.payload.project;
+          const newProj: Project = data.payload?.project;
+          if (!ws.userId || !isValidProject(newProj)) break;
           if (!state.projects.some((p) => p.id === newProj.id)) {
             state.projects.push(newProj);
             broadcast({ type: 'PROJECT_CREATED', payload: { project: newProj } });
