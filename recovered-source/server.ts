@@ -255,7 +255,7 @@ let state = loadWorkspaceState() || {
 
 // Persist on the server's local disk. For hosted deployment, DATA_FILE must
 // point to a mounted persistent volume; ephemeral filesystems are not durable.
-function persistWorkspaceState() {
+function persistWorkspaceState(): boolean {
   try {
     fs.mkdirSync(path.dirname(dataFile), { recursive: true });
     const safeState = {
@@ -267,10 +267,11 @@ function persistWorkspaceState() {
     const tempFile = `${dataFile}.tmp`;
     fs.writeFileSync(tempFile, JSON.stringify(safeState, null, 2), 'utf8');
     fs.renameSync(tempFile, dataFile);
+    return true;
   } catch (error) {
     console.error('Workspace persistence failed:', error);
-  }
-}
+    return false;
+  }}
 
 // WebSocket client session mapping
 interface ExtendedWebSocket extends WebSocket {
@@ -657,7 +658,12 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
           break;
         }
       }
-      persistWorkspaceState();
+      if (!persistWorkspaceState() && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'SERVER_ERROR',
+          payload: { message: 'Your change is active for connected users but could not be saved to disk. Back up your work before restarting the server.' },
+        }));
+      }
     } catch (e) {
       console.error('Error handling WebSocket message:', e);
     }
