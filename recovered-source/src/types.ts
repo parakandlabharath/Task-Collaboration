@@ -97,7 +97,8 @@ export type WSEventType =
   | 'ACTIVITY_LOGGED'
   | 'PROJECT_CREATED'
   | 'USER_TYPING'
-  | 'TASK_LOCK';
+  | 'TASK_LOCK'
+  | 'SERVER_ERROR';
 
 export interface WSEvent {
   type: WSEventType;
